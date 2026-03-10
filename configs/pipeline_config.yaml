@@ -1,0 +1,90 @@
+# =============================================================================
+# YOLOv8 Continual Learning Pipeline — RK3588 Configuration
+# =============================================================================
+
+# ---------- Model ----------
+model:
+  base_weights: "yolov8n.pt"          # Starting checkpoint
+  task: "detect"
+  imgsz: 640
+  device: "cpu"                        # RK3588 CPU; use 'npu' path for RKNN
+
+# ---------- Training ----------
+training:
+  epochs: 5                            # Keep low for edge; EWC needs few epochs
+  batch_size: 4                        # RK3588 RAM constraint (8 GB LPDDR4)
+  learning_rate: 0.0005
+  optimizer: "AdamW"
+  workers: 2                           # IO threads on RK3588
+  cache: false                         # Avoid OOM on device
+  amp: false                           # No AMP on RK3588 CPU
+
+# ---------- Continual Learning ----------
+continual_learning:
+  method: "ewc_lora"                   # Options: ewc | lora | ewc_lora
+
+  ewc:
+    enabled: true
+    lambda: 5000                       # Regularisation strength
+    fisher_samples: 200                # Samples to estimate Fisher matrix
+
+  lora:
+    enabled: true
+    rank: 4                            # LoRA rank — lower = fewer params
+    alpha: 8                           # LoRA scaling factor
+    target_modules:                    # Backbone Conv layers to adapt
+      - "model.0"
+      - "model.1"
+      - "model.2"
+      - "model.3"
+    dropout: 0.05
+
+  replay_buffer:
+    enabled: true
+    capacity: 500                      # Max stored samples
+    strategy: "reservoir"              # Options: reservoir | fifo | class_balanced
+    replay_fraction: 0.3               # Fraction of each batch from buffer
+
+# ---------- Drift Detection ----------
+drift_detection:
+  confidence_threshold: 0.45          # Retrain if avg confidence drops below
+  window_size: 50                     # Rolling window for confidence monitoring
+  min_detections: 10                  # Min detections before evaluating drift
+
+# ---------- Retraining Triggers ----------
+retraining_triggers:
+  confidence_drop:
+    enabled: true
+    threshold: 0.45
+
+  new_data_accumulation:
+    enabled: true
+    sample_count: 100                  # Trigger after N new labeled samples
+
+  scheduled_interval:
+    enabled: true
+    interval_hours: 24                 # Retrain every N hours
+
+# ---------- Data ----------
+data:
+  yaml_path: "data/data.yaml"
+  new_data_dir: "data/incoming/"      # Where edge-collected images land
+  labeled_dir: "data/labeled/"        # After pseudo-label or manual label
+  replay_dir: "data/replay/"
+
+# ---------- Paths ----------
+paths:
+  checkpoints: "checkpoints/"
+  logs: "logs/"
+  metrics: "logs/metrics/"
+  fisher_cache: "checkpoints/fisher_matrix.pt"
+  replay_index: "checkpoints/replay_buffer.pkl"
+
+# ---------- RK3588 Hardware ----------
+rk3588:
+  rknn_export: false                  # Set true to export to .rknn after training
+  rknn_model_path: "models/yolov8n_cl.rknn"
+  quantization: "i8"                  # Options: i8 | fp16
+  target_platform: "rk3588"
+  mean_values: [[0, 0, 0]]
+  std_values: [[255, 255, 255]]

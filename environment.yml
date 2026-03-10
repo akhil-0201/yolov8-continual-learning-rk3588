@@ -1,0 +1,24 @@
+name: yolov8-cl-rk3588
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - ultralytics>=8.0.0
+    - torch>=2.0.0
+    - torchvision>=0.15.0
+    - numpy>=1.24.0
+    - opencv-python>=4.8.0
+    - pillow>=10.0.0
+    - pyyaml>=6.0
+    - scipy>=1.11.0
+    - peft>=0.6.0
+    - tqdm>=4.66.0
+    - tensorboard>=2.14.0
+    - psutil>=5.9.0
+    - pandas>=2.1.0
+    - matplotlib>=3.8.0
+    - scikit-learn>=1.3.0

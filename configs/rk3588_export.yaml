@@ -1,0 +1,20 @@
+# RKNN export configuration for RK3588
+# Used by scripts/export_rknn.py
+
+export:
+  input_model: "checkpoints/best_cl.pt"   # PyTorch model after CL training
+  output_path: "models/yolov8n_cl.rknn"
+  target_platform: "rk3588"
+  quantization_dtype: "i8"                 # i8 = INT8 (fastest), fp16 also valid
+  do_quantization: true
+  dataset: "data/calibration.txt"          # One image path per line, ~100 images
+  mean_values: [[0, 0, 0]]
+  std_values: [[255, 255, 255]]
+  optimization_level: 3
+  output_tensor_type: "uint8"
+
+# Performance targets on RK3588
+targets:
+  model_size_mb: "<6"         # YOLOv8n INT8
+  inference_ms: "<50"         # On RK3588 NPU
+  memory_peak_mb: "<512"

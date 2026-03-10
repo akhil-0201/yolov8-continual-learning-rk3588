@@ -1,0 +1,14 @@
+# Data configuration template
+# Copy to data/data.yaml and fill in your dataset details
+
+path: data/
+train: images/train
+val: images/val
+test: images/test   # optional
+
+nc: 80              # number of classes — adjust to your dataset
+names:              # class names list
+  - person
+  - bicycle
+  - car
+  # ... add all your class names
